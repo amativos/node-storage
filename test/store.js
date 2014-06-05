@@ -1,0 +1,132 @@
+var fs = require('fs');
+var rmrf = require('rimraf').sync;
+var Storage = require('../index');
+var testfile = __dirname + '/tmp/testdb';
+var NUM_FILES = 500;
+
+describe('Storage', function () {
+	var Store;
+
+	before(function () {
+		Store = new Storage(testfile);
+	});
+
+	after(function () {
+    rmrf(__dirname + '/tmp');
+	});
+
+	it('should be able to get values from autoloaded database right after initialization', function (done) {
+    var file = __dirname + '/tmp/loadgettest';
+
+    fs.writeFile(file, JSON.stringify({testkey: 111}), function (err) {
+      var store = new Storage(file);
+      store.get('testkey').should.equal(111);
+      done(err);
+    });
+	});
+
+  it('should be able to put values into autoloaded database and persist them to a file', function (done) {
+    var file = __dirname + '/tmp/loadputtest';
+    var store = new Storage(file);
+
+    store.queue.drain = function () {
+      fs.readFile(file, function (err, data) {
+        JSON.parse(data).testkey.should.equal(111);
+        done(err);
+      });
+    };
+
+    store.put('testkey', 111);
+    store.get('testkey').should.equal(111);
+  });
+
+  it('must be able to handle dot-syntax when putting/gettings values', function () {
+    Store.put('some.nested.object.key', 'hello');
+    Store.get('some').nested.object.key.should.equal('hello');
+
+    Store.put('another', {nested: {key: 'world'}});
+    Store.get('another.nested.key').should.equal('world');
+
+    Store.put('deeply.nested.value', 42);
+    Store.get('deeply.nested.value').should.equal(42);
+    Store.get('deeply').nested.value.should.equal(42);
+
+    Store.put('deeply.nested.anotherValue', 'hello');
+    Store.get('deeply.nested').should.eql({value: 42, anotherValue: 'hello'});
+
+    Store.put('deeply.nested.hello', 'world');
+    Store.get('deeply.nested').should.eql({value: 42, anotherValue: 'hello', hello: 'world'});
+  });
+
+  it('must remove values from the store', function (done) {
+    var file = __dirname + '/tmp/removetest';
+    var store =  new Storage(file);
+
+    store.queue.drain = function () {
+      fs.readFile(file, function (err, data) {
+        data = JSON.parse(data);
+        data.another.should.eql({value: {hello: 'world'}});
+        data.should.not.have.property('constant');
+        done(err);
+      });
+    };
+
+    store.put('another.value', {hello: 'world'});
+    store.put('another.removed', 'value');
+
+    store.get('another.removed').should.equal('value');
+
+    store.put('constant', 1000);
+
+    store.remove('another.removed');
+    store.remove('constant');
+  });
+
+  it('must asynchronously persist all put values to a file', function (done) {
+    var file = __dirname + '/tmp/persisttest';
+    var store = new Storage(file);
+
+    store.queue.drain = function () {
+      fs.readFile(file, function (err, data) {
+        data = JSON.parse(data);
+
+        data.nested.object.should.eql({hello: 'world'});
+        data.somevalue.should.equal(333);
+
+        done(err);
+      });
+    };
+
+    store.put('nested.object', {hello: 'world'});
+    store.put('somevalue', 333);
+  });
+
+  it('must handle multiple ('+NUM_FILES+') file writes by safely writing them one after another', function (done) {
+    var file = __dirname + '/tmp/multiple';
+    var store = new Storage(file);
+    var nested = {};
+
+    store.queue.drain = function () {
+      fs.readFile(file, function (err, data) {
+        JSON.parse(data).nested.should.eql(nested);
+        done(err);
+      });
+    };
+
+    for (var i = 0; i < NUM_FILES; i++) {
+      nested['value' + i] = i;
+      store.put('nested.value' + i, i);
+    }
+  });
+
+  it('should throw an error if provided key is not a string', function () {
+    Store.put.bind(Store, 1, 1).should.throwError();
+    Store.get.bind(Store, null).should.throwError();
+  });
+
+  it('should throw an error when dot-syntax string contains value that is not an object', function () {
+    Store.put('very.nested', 10);
+    Store.put.bind(Store, 'very.nested.object.key', 111).should.throwError(/^very.nested .+/);
+  });
+
+});
