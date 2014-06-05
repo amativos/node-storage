@@ -32,7 +32,7 @@ store.get('nested.value'); // undefined
 store.put('nested.numbers', [1, 2, 3]); 
 store.get('nested.numbers'); // [1, 2, 3]
 
-// throws 'nested.numbers is not a object' error
+// throws 'nested.numbers is not an object' error
 store.put('nested.numbers.primes', [7, 11, 13]);
 
 store.put('nested.primes', [7, 11, 13]);
