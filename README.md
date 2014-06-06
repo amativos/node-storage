@@ -18,7 +18,7 @@ var Storage = require('node-storage');
 // or just load an existing file
 var store = new Storage('path/to/file');
 
-// values are queued to be persisted to disk on every put()
+// persistence to disk is queued on every put()
 store.put('hello', 'world');
 
 // storage object is kept in memory for quick access
@@ -41,4 +41,10 @@ store.get('nested'); // { numbers: [1, 2, 3], primes: [7, 11, 13] }
 store.put('deeply.nested', {object: {hello: 'world'}});
 store.get('deeply.nested.object.hello'); // 'world'
 store.get('deeply.nested').object.hello; // 'world'
+
+// remove also queues storage object to be persisted to disk
+store.remove('deeply.nested.object');
+store.get('deeply.nested.object.hello'); // undefined
+store.get('deeply.nested.object'); // undefined
+store.get('deeply.nested'); // {}
 ```
