@@ -19,7 +19,13 @@ function Storage(filename) {
   self.backupFilename = filename + '~~';
 
   self.queue = async.queue(function (task, cb) {
-    self._persist(cb);
+    self._persist(function (err) {
+      if (err) {
+        throw err;
+      }
+
+      cb();
+    });
   });
 
   self.store = self._load();
@@ -44,12 +50,7 @@ Storage.prototype.put = function (key, value) {
   }
 
   this._setDeep(key.split('.'), value, false);
-
-  this.queue.push({}, function (err) {
-    if (err) {
-      throw err;
-    }
-  });
+  this.queue.push();
 };
 
 Storage.prototype.get = function (key) {
@@ -119,6 +120,7 @@ Storage.prototype.remove = function (key) {
   }
 
   this._setDeep(key.split('.'), undefined, true);
+  this.queue.push();
 };
 
 Storage.prototype._persist = function (cb) {
