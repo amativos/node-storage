@@ -40,7 +40,7 @@ describe('Storage', function () {
     store.get('testkey').should.equal(111);
   });
 
-  it('must be able to handle dot-syntax when putting/gettings values', function () {
+  it('must be able to handle dot-syntax when putting/gettings/removing values', function () {
     Store.put('some.nested.object.key', 'hello');
     Store.get('some').nested.object.key.should.equal('hello');
 
@@ -56,6 +56,12 @@ describe('Storage', function () {
 
     Store.put('deeply.nested.hello', 'world');
     Store.get('deeply.nested').should.eql({value: 42, anotherValue: 'hello', hello: 'world'});
+
+    Store.remove('deeply.nested.value');
+    Store.remove('deeply.nested.anotherValue');
+    Store.remove('deeply.nested.hello');
+
+    Store.get('deeply.nested').should.eql({});
   });
 
   it('must remove values from the store', function (done) {
