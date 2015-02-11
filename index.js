@@ -126,15 +126,42 @@ Storage.prototype.remove = function (key) {
 Storage.prototype._persist = function (cb) {
   var self = this;
   var _data = JSON.stringify(self.store);
-  
+
   async.series([
     async.apply(self._fileMustNotExist, self.tempFilename),
     async.apply(self._fileMustNotExist, self.backupFilename),
     async.apply(self._doBackup.bind(self)),
-    async.apply(fs.writeFile, self.tempFilename, _data),
+    async.apply(self.writeData, self.tempFilename, _data),
     async.apply(fs.rename, self.tempFilename, self.filename),
     async.apply(self._fileMustNotExist, self.backupFilename)
   ], cb);
+};
+
+Storage.prototype.writeData = function (filename, data, cb) {
+  var _fd;
+
+  async.waterfall([
+    async.apply(fs.open, filename, 'w'),
+
+    function (fd, cb) {
+      _fd = fd;
+      var buf = new Buffer(data);
+      var offset = 0;
+      var position = 0;
+
+      fs.write(fd, buf, offset, buf.length, position, cb);
+    },
+
+    function (written, buf, cb) {
+      fs.fsync(_fd, cb);
+    },
+
+    function (cb) {
+      fs.close(_fd, cb);
+    }
+  ], function (err) {
+    cb(err);
+  });
 };
 
 Storage.prototype._doBackup = function (cb) {
