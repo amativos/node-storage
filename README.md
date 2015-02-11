@@ -2,8 +2,7 @@ node-storage
 ============
 
 Simple file based store for node.js.
-Useful for storing configs and such on something like an embedded system. 
-It keeps a queue of files to be written to disk if you put() multiple files at once. 
+Useful for storing configs and such on something like an embedded system.
 
 ```
 npm install node-storage
@@ -29,7 +28,7 @@ store.get('nested.value'); // undefined
 
 // here, 'nested' object is created, but only if it didn't previously exist,
 // in which case 'numbers' key is just added to the object
-store.put('nested.numbers', [1, 2, 3]); 
+store.put('nested.numbers', [1, 2, 3]);
 store.get('nested.numbers'); // [1, 2, 3]
 
 // throws 'nested.numbers is not an object' error
