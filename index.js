@@ -63,25 +63,6 @@ Storage.prototype.get = function (key) {
 
 Storage.prototype._getDeep = function (path) {
   var storage = this.store;
-  var dest = path[path.length - 1];
-  var key;
-
-  for (var i = 0; i < path.length; i++) {
-    key = path[i];
-
-    if (isObject(storage)) {
-      storage = storage[key];
-    } else {
-      break;
-    }
-  }
-
-  return key === dest ? storage : undefined;
-};
-
-Storage.prototype._setDeep = function (path, value, remove) {
-  var storage = this.store;
-  var dest = path[path.length - 1];
 
   for (var i = 0; i < path.length; i++) {
     var p = path[i];
@@ -91,15 +72,32 @@ Storage.prototype._setDeep = function (path, value, remove) {
     }
 
     if (!storage.hasOwnProperty(p)) {
-      if (p === dest) {
-        setOrRemove(storage, p);
-        break;
-      } else {
-        storage[p] = {};
-      }
-    } else if (p === dest) {
+      return undefined;
+    }
+
+    storage = storage[p];
+  }
+
+  return storage;
+};
+
+Storage.prototype._setDeep = function (path, value, remove) {
+  var storage = this.store;
+
+  for (var i = 0; i < path.length; i++) {
+    var p = path[i];
+
+    if (!isObject(storage)) {
+      throw new Error(path.slice(0, i).join('.') + ' is not an object');
+    }
+
+    if (i === path.length - 1) {
       setOrRemove(storage, p);
-      break;
+      return;
+    }
+
+    if (!storage.hasOwnProperty(p)) {
+      storage[p] = {};
     }
 
     storage = storage[p];
