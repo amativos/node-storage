@@ -132,7 +132,15 @@ describe('Storage', function () {
 
   it('should throw an error when dot-syntax string contains value that is not an object', function () {
     Store.put('very.nested', 10);
+    Store.get.bind(Store, 'very.nested.object.key').should.throwError(/^very.nested .+/);
     Store.put.bind(Store, 'very.nested.object.key', 111).should.throwError(/^very.nested .+/);
   });
 
+  it('should properly handle multiple equal keys on a path', function () {
+    Store.put('x.a.b.c.a.b', 1);
+    Store.get('x').should.eql({ a: { b: { c: { a: { b: 1 } } } } });
+
+    Store.put('y', { a: 2 });
+    Store.get.bind(Store, 'y.a.b.c.a.b').should.throwError();
+  });
 });
