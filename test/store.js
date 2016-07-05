@@ -2,7 +2,7 @@ var fs = require('fs');
 var rmrf = require('rimraf').sync;
 var Storage = require('../index');
 var testfile = __dirname + '/tmp/testdb';
-var NUM_FILES = 500;
+var NUM_TEST_WRITES = 50;
 
 describe('Storage', function () {
 	var Store;
@@ -107,7 +107,7 @@ describe('Storage', function () {
     store.put('somevalue', 333);
   });
 
-  it('must handle multiple ('+NUM_FILES+') file writes by safely writing them one after another', function (done) {
+  it('must handle multiple ('+NUM_TEST_WRITES+') file writes by safely writing them one after another', function (done) {
     var file = __dirname + '/tmp/multiple';
     var store = new Storage(file);
     var nested = {};
@@ -119,7 +119,7 @@ describe('Storage', function () {
       });
     };
 
-    for (var i = 0; i < NUM_FILES; i++) {
+    for (var i = 0; i < NUM_TEST_WRITES; i++) {
       nested['value' + i] = i;
       store.put('nested.value' + i, i);
     }
