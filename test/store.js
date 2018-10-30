@@ -2,7 +2,6 @@ var fs = require('fs');
 var rmrf = require('rimraf').sync;
 var Storage = require('../index');
 var testfile = __dirname + '/tmp/testdb';
-var NUM_TEST_WRITES = 50;
 
 describe('Storage', function () {
 	var Store;
@@ -107,24 +106,6 @@ describe('Storage', function () {
     store.put('somevalue', 333);
   });
 
-  it('must handle multiple ('+NUM_TEST_WRITES+') file writes by safely writing them one after another', function (done) {
-    var file = __dirname + '/tmp/multiple';
-    var store = new Storage(file);
-    var nested = {};
-
-    store.queue.drain = function () {
-      fs.readFile(file, function (err, data) {
-        JSON.parse(data).nested.should.eql(nested);
-        done(err);
-      });
-    };
-
-    for (var i = 0; i < NUM_TEST_WRITES; i++) {
-      nested['value' + i] = i;
-      store.put('nested.value' + i, i);
-    }
-  });
-
   it('should throw an error if provided key is not a string', function () {
     Store.put.bind(Store, 1, 1).should.throwError();
     Store.get.bind(Store, null).should.throwError();
@@ -133,6 +114,8 @@ describe('Storage', function () {
   it('should throw an error when dot-syntax string contains value that is not an object', function () {
     Store.put('very.nested', 10);
     Store.get.bind(Store, 'very.nested.object.key').should.throwError(/^very.nested .+/);
+	Store.get.bind(Store, 'very.missing').should.not.throwError();
+	Store.get.bind(Store, 'very.missing.missing2').should.not.throwError();
     Store.put.bind(Store, 'very.nested.object.key', 111).should.throwError(/^very.nested .+/);
   });
 

@@ -32,16 +32,12 @@ function Storage(filename) {
   self._resolvePath();
 }
 
-Storage.prototype._fileMustNotExist = function (file, cb) {
-  fs.exists(file, function (exists) {
-    if (!exists) {
-      return cb(null);
-    }
+Storage.prototype.get = function (key) {
+  if (typeof key !== 'string') {
+	throw new Error('key must be a string');
+  }
 
-    fs.unlink(file, function (err) {
-      return cb(err);
-    });
-  });
+  return this._getDeep(key.split('.'));
 };
 
 Storage.prototype.put = function (key, value) {
@@ -53,12 +49,13 @@ Storage.prototype.put = function (key, value) {
   this.queue.push();
 };
 
-Storage.prototype.get = function (key) {
+Storage.prototype.remove = function (key) {
   if (typeof key !== 'string') {
-    throw new Error('key must be a string');
+	throw new Error('key must be a string');
   }
 
-  return this._getDeep(key.split('.'));
+  this._setDeep(key.split('.'), undefined, true);
+  this.queue.push();
 };
 
 Storage.prototype._getDeep = function (path) {
@@ -110,15 +107,6 @@ Storage.prototype._setDeep = function (path, value, remove) {
       obj[key] = value;
     }
   }
-};
-
-Storage.prototype.remove = function (key) {
-  if (typeof key !== 'string') {
-    throw new Error('key must be a string');
-  }
-
-  this._setDeep(key.split('.'), undefined, true);
-  this.queue.push();
 };
 
 Storage.prototype._persist = function (cb) {
@@ -188,6 +176,18 @@ Storage.prototype._load = function () {
   }
 
   return data;
+};
+
+Storage.prototype._fileMustNotExist = function (file, cb) {
+  fs.exists(file, function (exists) {
+	if (!exists) {
+	  return cb(null);
+	}
+
+	fs.unlink(file, function (err) {
+	  return cb(err);
+	});
+  });
 };
 
 Storage.prototype._resolvePath = function () {
