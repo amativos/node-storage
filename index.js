@@ -18,8 +18,8 @@ function Storage(filename) {
   self.tempFilename = filename + '~';
   self.backupFilename = filename + '~~';
 
-  self.queue = async.queue(function (task, cb) {
-    self._persist(function (err) {
+  self.queue = async.queue(function(task, cb) {
+    self._persist(function(err) {
       if (err) {
         throw err;
       }
@@ -32,15 +32,15 @@ function Storage(filename) {
   self._resolvePath();
 }
 
-Storage.prototype.get = function (key) {
+Storage.prototype.get = function(key) {
   if (typeof key !== 'string') {
-	throw new Error('key must be a string');
+    throw new Error('key must be a string');
   }
 
   return this._getDeep(key.split('.'));
 };
 
-Storage.prototype.put = function (key, value) {
+Storage.prototype.put = function(key, value) {
   if (typeof key !== 'string') {
     throw new Error('key must be a string');
   }
@@ -49,16 +49,16 @@ Storage.prototype.put = function (key, value) {
   this.queue.push();
 };
 
-Storage.prototype.remove = function (key) {
+Storage.prototype.remove = function(key) {
   if (typeof key !== 'string') {
-	throw new Error('key must be a string');
+    throw new Error('key must be a string');
   }
 
   this._setDeep(key.split('.'), undefined, true);
   this.queue.push();
 };
 
-Storage.prototype._getDeep = function (path) {
+Storage.prototype._getDeep = function(path) {
   var storage = this.store;
 
   for (var i = 0; i < path.length; i++) {
@@ -78,7 +78,7 @@ Storage.prototype._getDeep = function (path) {
   return storage;
 };
 
-Storage.prototype._setDeep = function (path, value, remove) {
+Storage.prototype._setDeep = function(path, value, remove) {
   var storage = this.store;
 
   for (var i = 0; i < path.length; i++) {
@@ -109,7 +109,7 @@ Storage.prototype._setDeep = function (path, value, remove) {
   }
 };
 
-Storage.prototype._persist = function (cb) {
+Storage.prototype._persist = function(cb) {
   var self = this;
   var _data = JSON.stringify(self.store);
 
@@ -123,13 +123,13 @@ Storage.prototype._persist = function (cb) {
   ], cb);
 };
 
-Storage.prototype.writeData = function (filename, data, cb) {
+Storage.prototype.writeData = function(filename, data, cb) {
   var _fd;
 
   async.waterfall([
     async.apply(fs.open, filename, 'w'),
 
-    function (fd, cb) {
+    function(fd, cb) {
       _fd = fd;
       var buf = new Buffer(data);
       var offset = 0;
@@ -138,22 +138,22 @@ Storage.prototype.writeData = function (filename, data, cb) {
       fs.write(fd, buf, offset, buf.length, position, cb);
     },
 
-    function (written, buf, cb) {
+    function(written, buf, cb) {
       fs.fsync(_fd, cb);
     },
 
-    function (cb) {
+    function(cb) {
       fs.close(_fd, cb);
     }
-  ], function (err) {
+  ], function(err) {
     cb(err);
   });
 };
 
-Storage.prototype._doBackup = function (cb) {
+Storage.prototype._doBackup = function(cb) {
   var self = this;
 
-  fs.exists(self.filename, function (exists) {
+  fs.exists(self.filename, function(exists) {
     if (!exists) {
       return cb(null);
     }
@@ -162,12 +162,12 @@ Storage.prototype._doBackup = function (cb) {
   });
 };
 
-Storage.prototype._load = function () {
+Storage.prototype._load = function() {
   var data;
 
   try {
     data = JSON.parse(fs.readFileSync(this.filename));
-  } catch(e) {
+  } catch (e) {
     if (e.code !== 'ENOENT') {
       throw e;
     }
@@ -178,19 +178,19 @@ Storage.prototype._load = function () {
   return data;
 };
 
-Storage.prototype._fileMustNotExist = function (file, cb) {
-  fs.exists(file, function (exists) {
-	if (!exists) {
-	  return cb(null);
-	}
+Storage.prototype._fileMustNotExist = function(file, cb) {
+  fs.exists(file, function(exists) {
+    if (!exists) {
+      return cb(null);
+    }
 
-	fs.unlink(file, function (err) {
-	  return cb(err);
-	});
+    fs.unlink(file, function(err) {
+      return cb(err);
+    });
   });
 };
 
-Storage.prototype._resolvePath = function () {
+Storage.prototype._resolvePath = function() {
   var _path = this.filename.split('/').slice(0, -1).join('/');
 
   if (_path) {

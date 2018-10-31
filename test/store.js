@@ -4,25 +4,25 @@ var Storage = require('../index');
 var testfile = __dirname + '/tmp/testdb';
 
 describe('Storage', function () {
-	var Store;
+  var Store;
 
-	before(function () {
-		Store = new Storage(testfile);
-	});
+  before(function () {
+    Store = new Storage(testfile);
+  });
 
-	after(function () {
+  after(function () {
     rmrf(__dirname + '/tmp');
-	});
+  });
 
-	it('should be able to get values from autoloaded database right after initialization', function (done) {
+  it('should be able to get values from autoloaded database right after initialization', function (done) {
     var file = __dirname + '/tmp/loadgettest';
 
-    fs.writeFile(file, JSON.stringify({testkey: 111}), function (err) {
+    fs.writeFile(file, JSON.stringify({ testkey: 111 }), function (err) {
       var store = new Storage(file);
       store.get('testkey').should.equal(111);
       done(err);
     });
-	});
+  });
 
   it('should be able to put values into autoloaded database and persist them to a file', function (done) {
     var file = __dirname + '/tmp/loadputtest';
@@ -43,7 +43,7 @@ describe('Storage', function () {
     Store.put('some.nested.object.key', 'hello');
     Store.get('some').nested.object.key.should.equal('hello');
 
-    Store.put('another', {nested: {key: 'world'}});
+    Store.put('another', { nested: { key: 'world' } });
     Store.get('another.nested.key').should.equal('world');
 
     Store.put('deeply.nested.value', 42);
@@ -51,10 +51,10 @@ describe('Storage', function () {
     Store.get('deeply').nested.value.should.equal(42);
 
     Store.put('deeply.nested.anotherValue', 'hello');
-    Store.get('deeply.nested').should.eql({value: 42, anotherValue: 'hello'});
+    Store.get('deeply.nested').should.eql({ value: 42, anotherValue: 'hello' });
 
     Store.put('deeply.nested.hello', 'world');
-    Store.get('deeply.nested').should.eql({value: 42, anotherValue: 'hello', hello: 'world'});
+    Store.get('deeply.nested').should.eql({ value: 42, anotherValue: 'hello', hello: 'world' });
 
     Store.remove('deeply.nested.value');
     Store.remove('deeply.nested.anotherValue');
@@ -65,18 +65,18 @@ describe('Storage', function () {
 
   it('must remove values from the store', function (done) {
     var file = __dirname + '/tmp/removetest';
-    var store =  new Storage(file);
+    var store = new Storage(file);
 
     store.queue.drain = function () {
       fs.readFile(file, function (err, data) {
         data = JSON.parse(data);
-        data.another.should.eql({value: {hello: 'world'}});
+        data.another.should.eql({ value: { hello: 'world' } });
         data.should.not.have.property('constant');
         done(err);
       });
     };
 
-    store.put('another.value', {hello: 'world'});
+    store.put('another.value', { hello: 'world' });
     store.put('another.removed', 'value');
 
     store.get('another.removed').should.equal('value');
@@ -95,14 +95,14 @@ describe('Storage', function () {
       fs.readFile(file, function (err, data) {
         data = JSON.parse(data);
 
-        data.nested.object.should.eql({hello: 'world'});
+        data.nested.object.should.eql({ hello: 'world' });
         data.somevalue.should.equal(333);
 
         done(err);
       });
     };
 
-    store.put('nested.object', {hello: 'world'});
+    store.put('nested.object', { hello: 'world' });
     store.put('somevalue', 333);
   });
 
@@ -114,8 +114,8 @@ describe('Storage', function () {
   it('should throw an error when dot-syntax string contains value that is not an object', function () {
     Store.put('very.nested', 10);
     Store.get.bind(Store, 'very.nested.object.key').should.throwError(/^very.nested .+/);
-	Store.get.bind(Store, 'very.missing').should.not.throwError();
-	Store.get.bind(Store, 'very.missing.missing2').should.not.throwError();
+    Store.get.bind(Store, 'very.missing').should.not.throwError();
+    Store.get.bind(Store, 'very.missing.missing2').should.not.throwError();
     Store.put.bind(Store, 'very.nested.object.key', 111).should.throwError(/^very.nested .+/);
   });
 
