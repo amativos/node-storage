@@ -1,6 +1,6 @@
 {
   "name": "node-storage",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "description": "Simple key-value file based store for node.js",
   "main": "index.js",
   "scripts": {
